@@ -19,31 +19,30 @@ def send_telegram(text):
 def alert():
     data = request.get_json()
 
-    # 1️⃣ New JSON format from TradingView
-    if "Event" in data:
-        text = (
-            f"⚡ *{data['Event']} Signal Triggered*\n\n"
-            f"📌 *Symbol:* {data['Symbol']}\n"
-            f"⏱ *Timeframe:* {data['Timeframe']}\n"
-            f"💰 *Price:* {data['Price']}\n"
-            f"📒 *Strategy:* {strategy}"
-        )
-        send_telegram(text)
-        return "ok", 200
+    # Extract fields safely
+    event = data.get("Event", "N/A")
+    symbol = data.get("Symbol", "N/A")
+    timeframe = data.get("Timeframe", "N/A")
+    price = data.get("Price", "N/A")
+    strategy = data.get("Strategy", "N/A")   # ← FIXED HERE
 
-    # 2️⃣ Old JSON format: { "message": "..." }
-    if "message" in data:
-        send_telegram(data["message"])
-        return "ok", 200
+    # Build Telegram message
+    text = (
+        f"⚡ *{event} Signal Triggered*\n\n"
+        f"📌 *Symbol:* {symbol}\n"
+        f"⏱ *Timeframe:* {timeframe}\n"
+        f"💰 *Price:* {price}\n"
+        f"📒 *Strategy:* {strategy}"
+    )
 
-    # 3️⃣ If nothing matches
-    send_telegram("⚠ Received an unsupported JSON format from TradingView.")
+    send_telegram(text)
     return "ok", 200
 
 
 @app.route("/ping")
 def ping():
     return {"status": "alive"}
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
