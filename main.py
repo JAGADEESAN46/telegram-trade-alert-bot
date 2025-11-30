@@ -25,14 +25,17 @@ def alert():
     timeframe = data.get("Timeframe", "N/A")
     price = data.get("Price", "N/A")
     strategy = data.get("Strategy", "N/A")   # ← FIXED HERE
-
+    # IST timestamp
+    ist = pytz.timezone("Asia/Kolkata")
+    current_time = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
     # Build Telegram message
     text = (
         f"⚡ *{event} Signal Triggered*\n\n"
         f"📌 *Symbol:* {symbol}\n"
         f"⏱ *Timeframe:* {timeframe}\n"
         f"💰 *Price:* {price}\n"
-        f"📒 *Strategy:* {strategy}"
+        f"📒 *Strategy:* {strategy}\n"
+        f"🕒 *Time (IST):* {current_time}"
     )
 
     send_telegram(text)
@@ -46,3 +49,4 @@ def ping():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
