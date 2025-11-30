@@ -1,11 +1,13 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import pytz
 from datetime import datetime
+
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = "8581613607:AAEz07YOX2k4Fdol8GNbAtU2x3wJXFJrWpQ"
 CHAT_ID = "-1003290859465"
+
 
 def send_telegram(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -16,39 +18,44 @@ def send_telegram(text):
     }
     requests.post(url, json=payload)
 
+
 @app.route('/alert', methods=['POST'])
 def alert():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({"error": "No JSON received"}), 400
 
     # Extract fields safely
     event = data.get("Event", "N/A")
     symbol = data.get("Symbol", "N/A")
     timeframe = data.get("Timeframe", "N/A")
     price = data.get("Price", "N/A")
-    strategy = data.get("Strategy", "N/A")   # ← FIXED HERE
+    strategy = data.get("Strategy", "N/A")
+
     # IST timestamp
     ist = pytz.timezone("Asia/Kolkata")
     current_time = datetime.now(ist).strftime("%d-%m-%Y %I:%M:%S %p")
+
     # Build Telegram message
     text = (
-        f"⚡ *{event} Signal Triggered*\n\n"
-        f"📌 *Symbol:* {symbol}\n"
-        f"⏱ *Timeframe:* {timeframe}\n"
-        f"💰 *Price:* {price}\n"
-        f"📒 *Strategy:* {strategy}\n"
-        f"🕒 *Time (IST):* {current_time}"
+        f"⚡ *{event} Signal Triggered!*\n\n"
+        f"📌 *Symbol:* `{symbol}`\n"
+        f"⏱ *Timeframe:* `{timeframe}`\n"
+        f"💰 *Price:* `{price}`\n"
+        f"📒 *Strategy:* `{strategy}`\n"
+        f"🕒 *Time (IST):* `{current_time}`\n"
+        f"———————————————"
     )
 
     send_telegram(text)
-    return "ok", 200
+    return jsonify({"status": "sent"}), 200
 
 
-@app.route("/ping")
+@app.route('/ping')
 def ping():
-    return {"status": "alive"}
+    return jsonify({"status": "alive"}), 200
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
